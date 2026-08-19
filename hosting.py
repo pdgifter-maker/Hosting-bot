@@ -19,6 +19,13 @@ import sys
 import atexit
 import requests
 from dotenv import load_dotenv  # New import for .env
+import io
+
+# System output streams ko UTF-8 force karein
+if hasattr(sys.stdout, 'buffer'):
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='ignore')
+if hasattr(sys.stderr, 'buffer'):
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='ignore')
 
 # --- Load environment variables ---
 load_dotenv()  # Load .env file
@@ -2454,10 +2461,15 @@ def run_script(script_path, script_owner_id, user_folder, file_name, message_obj
             if os.name == 'nt':
                  startupinfo = subprocess.STARTUPINFO(); startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
                  startupinfo.wShowWindow = subprocess.SW_HIDE
+            # Environment Variables me UTF-8 Force karna
+            env = os.environ.copy()
+            env["PYTHONIOENCODING"] = "utf-8"
+            env["PYTHONUTF8"] = "1"
+
             process = subprocess.Popen(
-                [sys.executable, script_path], cwd=user_folder, stdout=log_file, stderr=log_file,
-                stdin=subprocess.PIPE, startupinfo=startupinfo, creationflags=creationflags,
-                encoding='utf-8', errors='ignore'
+            [sys.executable, script_path], cwd=user_folder, stdout=log_file, stderr=log_file,
+            stdin=subprocess.PIPE, startupinfo=startupinfo, creationflags=creationflags,
+            encoding='utf-8', errors='ignore', env=env
             )
             logger.info(f"Started Python process {process.pid} for {script_key}")
             bot_scripts[script_key] = {
@@ -2514,7 +2526,11 @@ def run_js_script(script_path, script_owner_id, user_folder, file_name, message_
             logger.info(f"Running JS pre-check: {' '.join(check_command)}")
             check_proc = None
             try:
-                check_proc = subprocess.Popen(check_command, cwd=user_folder, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, encoding='utf-8', errors='ignore')
+                env = os.environ.copy()
+                env["PYTHONIOENCODING"] = "utf-8"
+                env["PYTHONUTF8"] = "1"
+
+                check_proc = subprocess.Popen(check_command, cwd=user_folder, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, encoding='utf-8', errors='ignore', env=env)
                 stdout, stderr = check_proc.communicate(timeout=5)
                 return_code = check_proc.returncode
                 logger.info(f"JS Pre-check early. RC: {return_code}. Stderr: {stderr[:200]}...")
