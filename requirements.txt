@@ -1,1 +1,6 @@
-python-telegram-bot requests python-dotenv
+python-telegram-bot
+pyTelegramBotAPI
+requests
+python-dotenv
+psutil
+flask
